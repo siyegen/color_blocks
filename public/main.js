@@ -8,8 +8,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 console.log("Cool code!");
 var InputComponent = require('./input_component.js').InputComponent;
 var RandomInputComponent = require('./input_component.js').RandomInputComponent;
-console.log(InputComponent);
-console.log(RandomInputComponent);
+
+var BLOCK_COLOR = 0xfffc2e;
+var LINE_COLOR = 0x00c19a;
+var GAME_STATES = { START: 0, LOADING: 1, GAME: 2 };
+var TIME_TO_ADD = 1; // in ms
 
 var Game = (function () {
   function Game(windowSize) {
@@ -17,7 +20,12 @@ var Game = (function () {
 
     this.width = windowSize[0];
     this.height = windowSize[1];
-    console.log("width and height", this.width, this.height);
+    this.cellSize = 25;
+    // find number of blocks to fill width
+    this.numCols = Math.floor(this.width / this.cellSize);
+    this.numRows = Math.floor(this.height / this.cellSize);
+    console.log('width: ' + this.width + ', height: ' + this.height + ',\n      numCols: ' + this.numCols + ', numRows: ' + this.numRows);
+    console.log('total number of cells: ' + this.numRows * this.numCols);
 
     this.inputState = {
       moving: false,
@@ -25,6 +33,11 @@ var Game = (function () {
         RIGHT: false,
         LEFT: false
       }
+    };
+
+    this.loadingState = {
+      total: this.numCols * this.numRows,
+      current: 0
     };
 
     this.renderer = PIXI.autoDetectRenderer(this.width, this.height);
@@ -36,27 +49,71 @@ var Game = (function () {
 
   _createClass(Game, [{
     key: 'update',
-    value: function update() {}
+    value: function update() {
+      // every 500ms add new block
+      if (this.currentState == GAME_STATES.LOADING) {
+        debugger;
+        if (this.currentTime - this.loadingState.timeAdded >= TIME_TO_ADD || this.loadingState.current == 0) {
+          console.log("add block");
+          this.loadingState.current += 2220;
+          this.loadingState.timeAdded = new Date();
+        }
+        if (this.loadingState.total == this.loadingState.current) {
+          this.currentState = GAME_STATES.GAME;
+          console.log("finished loading", this.currentState);
+          console.log(this.loadingState);
+        }
+      }
+    }
+  }, {
+    key: '_renderNormal',
+    value: function _renderNormal() {
+      this.gfx.clear();
+      this.gfx.beginFill(BLOCK_COLOR, 1);
+      this.gfx.lineStyle(2, LINE_COLOR, 1);
+      for (var j = 0; j < this.numRows; j++) {
+        for (var i = 0; i < this.numCols; i++) {
+          this.gfx.drawRect(i * this.cellSize, j * this.cellSize, this.cellSize, this.cellSize);
+        };
+      };
+      this.gfx.endFill();
+    }
+  }, {
+    key: '_renderLoading',
+    value: function _renderLoading() {
+      // console.log("In loading");
+      // animate in all blocks
+    }
   }, {
     key: 'render',
     value: function render() {
       this.renderer.render(this.stage);
-      this.gfx.clear();
-      this.gfx.beginFill(0xff1199, 1);
-      this.gfx.drawRect(0, 0, 10, 10);
-      this.gfx.drawRect(15, 0, 10, 10);
-      this.gfx.endFill();
+      if (this.currentState == GAME_STATES.GAME) {
+        this._renderNormal();
+      } else if (this.currentState == GAME_STATES.LOADING) {
+        this._renderLoading();
+      } else {
+        console.log("In start mode");
+      }
     }
   }, {
     key: 'handleInput',
-    value: function handleInput() {}
+    value: function handleInput() {
+      if (this.inputState.buttons.SPACE) {
+        if (this.currentState == GAME_STATES.START) {
+          this.currentState = GAME_STATES.LOADING;
+        }
+      }
+    }
   }, {
     key: 'loop',
     value: function loop() {
       var _this = this;
 
+      this.lastTime = this.currentTime;
       this.currentTime = new Date();
       this.handleInput(); // only used for debug and global handlers now
+      this.update();
       this.render();
       requestAnimationFrame(function () {
         return _this.loop();
@@ -67,6 +124,8 @@ var Game = (function () {
     value: function start() {
       console.log("Start game");
       document.body.appendChild(this.renderer.view);
+      this.currentState = GAME_STATES.START;
+      this.currentTime = new Date();
       this.loop();
     }
   }]);
