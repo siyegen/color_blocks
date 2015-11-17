@@ -10,7 +10,7 @@ var InputComponent = require('./input_component.js').InputComponent;
 var RandomInputComponent = require('./input_component.js').RandomInputComponent;
 
 var BLOCK_COLOR = 0xfffc2e;
-var LINE_COLOR = 0x00c19a;
+var LINE_COLOR = 0x00b9ff;
 var GAME_STATES = { START: 0, LOADING: 1, GAME: 2 };
 var TIME_TO_ADD = 1; // in ms
 
@@ -70,7 +70,7 @@ var Game = (function () {
     value: function _renderNormal() {
       this.gfx.clear();
       this.gfx.beginFill(BLOCK_COLOR, 1);
-      this.gfx.lineStyle(2, LINE_COLOR, 1);
+      this.gfx.lineStyle(1, LINE_COLOR, 1);
       for (var j = 0; j < this.numRows; j++) {
         for (var i = 0; i < this.numCols; i++) {
           this.gfx.drawRect(i * this.cellSize, j * this.cellSize, this.cellSize, this.cellSize);
